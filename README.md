@@ -43,8 +43,31 @@ http://localhost:8188
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
+## 自定义节点
+
+节点代码位于 `ComfyUI/custom_nodes/comfyui_dmxapi/`，包含三个核心节点：
+
+| 节点 | 功能 |
+|------|------|
+| **AcademicArchitect** | 将论文内容（摘要/方法章节）转化为结构化的 Visual Schema |
+| **AcademicRenderer** | 根据 Schema 调用图像模型生成学术风格插图，支持参考图输入 |
+| **AcademicEditor** | 对生成的图像进行自然语言编辑微调 |
+
 ## 常见疑问
 
 **Q: 我的 workflow 会被保存到哪里？**
 
 A: 会被保存到 `/ComfyUI/user` 中
+
+
+
+**Q: 为什么运行后是红色的结果**
+
+A: 这是报错的意思.可能原因包括但不限于:
+
+- API key不正确, 或者该API Key没有访问特定模型的权限
+- API Base写错了, 可以把多种后缀的都试试, 比如 /v1,  /v1/chat/completions/的
+- 其他报错, 可以在issue提
+
+![](./asset/error.jpg)
+
