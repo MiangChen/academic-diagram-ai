@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMFYUI_DIR="$SCRIPT_DIR/ComfyUI"
 CONFIG_FILE="$SCRIPT_DIR/config_llm.json"
 CONFIG_EXAMPLE="$SCRIPT_DIR/config_llm_example.json"
+SETUP_MARKER="$SCRIPT_DIR/.setup_done"
 
 # 颜色输出
 RED='\033[0;31m'
@@ -17,7 +18,14 @@ echo -e "${GREEN}=== ComfyUI 环境安装 ===${NC}"
 
 # 安装 ComfyUI 依赖
 echo -e "${YELLOW}[1/2] 安装 ComfyUI requirements...${NC}"
-pip install -r "$COMFYUI_DIR/requirements.txt"
+if ! pip install -r "$COMFYUI_DIR/requirements.txt"; then
+    echo -e "${RED}[错误] pip install 失败${NC}"
+    echo -e "${YELLOW}可能的原因:${NC}"
+    echo -e "${YELLOW}  - 未安装 Python 或 pip${NC}"
+    echo -e "${YELLOW}  - 网络问题，请检查网络连接或使用镜像源${NC}"
+    echo -e "${YELLOW}  - 权限问题，尝试使用 pip install --user${NC}"
+    exit 1
+fi
 
 # 检查配置文件
 echo -e "${YELLOW}[2/2] 检查配置文件...${NC}"
@@ -32,6 +40,9 @@ if [ ! -f "$CONFIG_FILE" ]; then
 else
     echo -e "${GREEN}[Setup] 配置文件已存在: $CONFIG_FILE${NC}"
 fi
+
+# 创建安装标记
+touch "$SETUP_MARKER"
 
 echo ""
 echo -e "${GREEN}=== 安装完成 ===${NC}"

@@ -1,17 +1,20 @@
 # 学术插图 AI 绘制工作流
 
+> 欢迎发起 issue，补充需要的绘图功能！
+
+基于 ComfyUI 的学术插图生成工具，通过 LLM 理解需求并自动生成专业的学术风格图表。
+
 ## 环境配置
 
 ```bash
 # 1. 安装依赖
 bash setup.sh
 
-# 2. 编辑配置文件，填入 API Key 和 Base URL, 以及要用的模型名称
-config_llm.json
-
-# 3. 启动 ComfyUI
+# 2. 启动 ComfyUI
 bash start.sh
 ```
+
+首次运行前，请编辑 `config_llm.json` 填入你的 API Key 和 Base URL。
 
 ## 访问
 
@@ -39,3 +42,9 @@ http://localhost:8188
 │  (Gemini/GPT)   │    │  (Nano-Banana)  │    │  (自然语言编辑) │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
+
+## 常见疑问
+
+**Q: 我的 workflow 会被保存到哪里？**
+
+A: 会被保存到 `/ComfyUI/user` 中

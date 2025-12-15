@@ -1,10 +1,11 @@
 #!/bin/bash
 # ComfyUI 启动脚本
-# 用法: bash Draw/start.sh
+# 用法: bash start.sh
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMFYUI_DIR="$SCRIPT_DIR/ComfyUI"
 CONFIG_FILE="$SCRIPT_DIR/config_llm.json"
+SETUP_MARKER="$SCRIPT_DIR/.setup_done"
 
 # 颜色输出
 RED='\033[0;31m'
@@ -14,10 +15,17 @@ NC='\033[0m'
 
 echo -e "${GREEN}=== ComfyUI 启动脚本 ===${NC}"
 
+# 检查是否已运行过 setup
+if [ ! -f "$SETUP_MARKER" ]; then
+    echo -e "${RED}[错误] 尚未运行安装脚本${NC}"
+    echo -e "${YELLOW}请先运行: bash setup.sh${NC}"
+    exit 1
+fi
+
 # 检查配置文件
 if [ ! -f "$CONFIG_FILE" ]; then
     echo -e "${RED}[错误] 未找到配置文件: $CONFIG_FILE${NC}"
-    echo -e "${YELLOW}请先运行: bash Draw/setup.sh${NC}"
+    echo -e "${YELLOW}请先运行: bash setup.sh${NC}"
     exit 1
 fi
 
