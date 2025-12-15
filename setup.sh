@@ -1,6 +1,6 @@
 #!/bin/bash
 # ComfyUI 环境安装脚本
-# 用法: bash Draw/setup.sh
+# 用法: bash setup.sh
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMFYUI_DIR="$SCRIPT_DIR/ComfyUI"
@@ -35,4 +35,4 @@ fi
 
 echo ""
 echo -e "${GREEN}=== 安装完成 ===${NC}"
-echo -e "${YELLOW}下一步: 编辑 Draw/config_llm.json 填入 API Key，然后运行 bash Draw/start.sh${NC}"
+echo -e "${YELLOW}下一步: 编辑 config_llm.json 填入 API Key，然后运行 bash start.sh${NC}"

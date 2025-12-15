@@ -4,13 +4,13 @@
 
 ```bash
 # 1. 安装依赖
-bash Draw/setup.sh
+bash setup.sh
 
 # 2. 编辑配置文件，填入 API Key 和 Base URL, 以及要用的模型名称
-Draw/config_llm.json
+config_llm.json
 
 # 3. 启动 ComfyUI
-bash Draw/start.sh
+bash start.sh
 ```
 
 ## 访问
@@ -21,13 +21,13 @@ http://localhost:8188
 
 ![open.png](./asset/open_folder.png)
 
-选择 `Draw/ComfyUI/workflows/academic_diagram.json`
+选择 `workflows/academic_diagram.json`
 
-![image-20251215233812328](./asset/README.asset/image-20251215233812328.png)
+![image-20251215233812328](./asset/select_wf.png)
 
 然后就可以看到该工作流：
 
-![image-20251215233857972](./asset/README.asset/image-20251215233857972.png)
+![image-20251215233857972](./asset/workflow.png)
 
 ## 工作流概览
 
