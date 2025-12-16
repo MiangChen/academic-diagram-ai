@@ -4,6 +4,15 @@
 
 基于 ComfyUI 的学术插图生成工具，通过 LLM 理解需求并自动生成专业的学术风格图表。
 
+**Demo: 生成科研style的哈吉米介绍图片：**
+
+<table>
+  <tr>
+    <td><img src="./asset/hajimi_prompt.png" width="100%"/></td>
+    <td><img src="./asset/hajimi.png" width="100%"/></td>
+  </tr>
+</table>
+
 ## 环境配置
 
 ```bash
