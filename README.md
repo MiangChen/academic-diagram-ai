@@ -55,11 +55,13 @@ http://localhost:8188
 
 ## 常见疑问
 
-**Q: 我的 workflow 会被保存到哪里？**
+**Q: 我在网页端修改了 workflow 会自动保存吗？**
 
-A: 会被保存到 `/ComfyUI/user` 中
+A: 需要Ctrl + S, 会保存到 `./ComfyUI/user` 中
 
+**Q: 生成的图片会自动保存到本地吗?**
 
+A: 会的. 会保存到 `./ComfuUI/temp` 中
 
 **Q: 为什么运行后是红色的结果**
 
