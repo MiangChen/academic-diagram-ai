@@ -35,9 +35,21 @@ if [ ! -f "$CONFIG_FILE" ]; then
     exit 1
 fi
 
+# 查找可用端口
+find_available_port() {
+    local port=$1
+    while lsof -i :$port >/dev/null 2>&1; do
+        echo -e "${YELLOW}[端口] $port 已被占用，尝试下一个...${NC}"
+        port=$((port + 1))
+    done
+    echo $port
+}
+
+PORT=$(find_available_port 8188)
+
 # 进入 ComfyUI 目录并启动
 cd "$COMFYUI_DIR"
-echo -e "${GREEN}[启动] ComfyUI @ http://localhost:8188${NC}"
+echo -e "${GREEN}[启动] ComfyUI @ http://localhost:${PORT}${NC}"
 echo ""
 
-python main.py --listen 0.0.0.0 --port 8188
+python main.py --listen 0.0.0.0 --port $PORT

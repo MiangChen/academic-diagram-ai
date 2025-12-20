@@ -13,6 +13,18 @@
   </tr>
 </table>
 
+**Demo: 将生成的图片拆解为单独的图标 Icon**
+
+<table>
+  <tr>
+    <td><img src="./asset/hajimi_transparent_split.png" width="100%"/></td>
+    <td><img src="./asset/hajimi_chip.png" width="100%"/></td>
+    <td><img src="./asset/hajimi_foot.png" width="100%"/></td>
+  </tr>
+</table>
+
+
+
 ## 环境配置
 
 ```bash
