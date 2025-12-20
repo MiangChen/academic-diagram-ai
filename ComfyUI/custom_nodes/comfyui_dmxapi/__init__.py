@@ -9,6 +9,8 @@ from .nodes_academic import (
     AcademicIconDetector,
     AcademicObjectLocator,
     ColorRegionSegmenter,
+    TransparentSplitter,
+    BatchImageSaver,
 )
 
 # 节点注册
@@ -19,6 +21,8 @@ NODE_CLASS_MAPPINGS = {
     "AcademicIconDetector": AcademicIconDetector,
     "AcademicObjectLocator": AcademicObjectLocator,
     "ColorRegionSegmenter": ColorRegionSegmenter,
+    "TransparentSplitter": TransparentSplitter,
+    "BatchImageSaver": BatchImageSaver,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -28,6 +32,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "AcademicIconDetector": "学术插图 - 图标检测 (IconDetector)",
     "AcademicObjectLocator": "学术插图 - 物体定位 (ObjectLocator)",
     "ColorRegionSegmenter": "学术插图 - 颜色区域分割 (ColorSegmenter)",
+    "TransparentSplitter": "学术插图 - 透明分割 (TransparentSplitter)",
+    "BatchImageSaver": "学术插图 - 批量保存 (BatchSaver)",
 }
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
