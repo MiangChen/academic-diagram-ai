@@ -2,16 +2,12 @@
 ComfyUI 自定义节点 - 学术插图工作流
 """
 
-from .nodes_academic import (
-    AcademicArchitect,
-    AcademicRenderer,
-    AcademicEditor,
-    AcademicIconDetector,
-    AcademicObjectLocator,
-    ColorRegionSegmenter,
-    TransparentSplitter,
-    BatchImageSaver,
-)
+from .nodes_architect import AcademicArchitect
+from .nodes_renderer import AcademicRenderer
+from .nodes_editor import AcademicEditor
+from .nodes_detector import AcademicIconDetector, AcademicObjectLocator
+from .nodes_segmenter import ColorRegionSegmenter, TransparentSplitter
+from .nodes_saver import BatchImageSaver
 
 # 节点注册
 NODE_CLASS_MAPPINGS = {
