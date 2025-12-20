@@ -1,0 +1,6 @@
+Input,Models,Alpha matting,Foreground threshold,Background threshold,Erosion size,Only mask,Post process mask,Arguments,Output,timestamp
+.gradio/flagged/Input/464f00c60e111e2cb388/hajimi.png,u2net,true,240,10,40,false,true,,,2025-12-19 20:52:48.426644
+.gradio/flagged/Input/1ff81c79b754b470efe4/hajimi.png,u2net,true,240,10,40,false,true,,,2025-12-19 20:52:53.357725
+.gradio/flagged/Input/91db8659731baabc4aed/hajimi.png,u2net,true,240,10,40,false,true,,,2025-12-19 20:52:54.860926
+.gradio/flagged/Input/90c9ab714d30e0907c4c/Screenshot from 2025-12-19 20-31-50.png,u2net,true,240,10,40,false,true,,,2025-12-19 20:53:02.388326
+.gradio/flagged/Input/0910e6467abddffc6040/Screenshot from 2025-12-19 20-31-50.png,u2net,true,240,10,40,false,true,,.gradio/flagged/Output/bf5c8fe0febff6649f49/output.png,2025-12-19 20:58:07.094221

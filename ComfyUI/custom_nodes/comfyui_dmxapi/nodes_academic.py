@@ -244,6 +244,96 @@ Style requirements:
         return (create_error_image(), info_text)
 
 
+class AcademicIconDetector:
+    """
+    图标检测器 - 分析图像中的所有图标/元素，输出列表供 SAM2/GroundingDino 使用
+    """
+    
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+            },
+            "optional": {
+                "custom_categories": ("STRING", {
+                    "multiline": True,
+                    "default": ""
+                }),
+            }
+        }
+    
+    RETURN_TYPES = ("STRING", "STRING")
+    RETURN_NAMES = ("icon_list", "detailed_info")
+    FUNCTION = "detect"
+    CATEGORY = "DMXAPI/Academic"
+
+    def detect(self, image, custom_categories=""):
+        config = load_config()
+        api_key = config.get("api_key", "")
+        url = config.get("api_url", "https://vip.dmxapi.com/v1/chat/completions")
+        text_model = config.get("text_model", "gemini-2.5-flash-preview")
+        
+        if not api_key:
+            return ("error", "错误: 未配置 API Key")
+        
+        img_base64 = image_to_base64(image)
+        
+        detect_prompt = """Analyze this academic diagram and list ALL visual icons/objects that could be extracted as individual assets.
+
+For each icon, provide a simple English label that could be used for object detection.
+
+Output format - just a comma-separated list of object names, like:
+drone, tank, robot dog, humanoid robot, building, gear icon, gamepad, helicopter
+
+Rules:
+- Only list actual visual objects/icons, not text labels or arrows
+- Use simple, common English words
+- Each item should be a distinct visual element that could be cut out
+- Do not include: boxes, frames, backgrounds, lines, arrows, text"""
+
+        if custom_categories:
+            detect_prompt += f"\n\nFocus especially on these categories: {custom_categories}"
+        
+        content = [
+            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_base64}"}},
+            {"type": "text", "text": detect_prompt}
+        ]
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        }
+        
+        payload = {
+            "model": text_model,
+            "messages": [{"role": "user", "content": content}],
+            "temperature": 0.3,
+        }
+        
+        try:
+            print(f"[IconDetector] 使用模型: {text_model}")
+            print("[IconDetector] 正在分析图像中的图标...")
+            response = requests.post(url, headers=headers, json=payload, timeout=60)
+            
+            if response.status_code == 200:
+                result = response.json()
+                icon_list = result["choices"][0]["message"]["content"].strip()
+                # 清理输出，确保是简单的逗号分隔列表
+                icon_list = icon_list.replace("\n", ", ").replace("  ", " ")
+                print(f"[IconDetector] 检测到图标: {icon_list}")
+                return (icon_list, f"检测成功，找到图标: {icon_list}")
+            else:
+                error = f"API 错误: {response.status_code}"
+                print(f"[IconDetector] {error}")
+                return ("", error)
+                
+        except Exception as e:
+            error = f"错误: {str(e)}"
+            print(f"[IconDetector] {error}")
+            return ("", error)
+
+
 class AcademicEditor:
     """
     Step 3: The Editor - 对生成的图像进行自然语言编辑
@@ -269,9 +359,8 @@ class AcademicEditor:
 
     def edit(self, image, edit_instruction, enabled=True):
         if not enabled:
-            print("[Editor] 已停用，跳过编辑")
-            empty_img = np.zeros((1, 512, 512, 3), dtype=np.float32)
-            return (torch.from_numpy(empty_img), "已停用")
+            print("[Editor] 已停用，直接输出原图")
+            return (image, "已停用 - 直接输出原图")
         
         config = load_config()
         api_key = config.get("api_key", "")
@@ -336,3 +425,300 @@ Important:
         
         print(f"[Editor] {info_text}")
         return (image, info_text)
+
+
+class AcademicObjectLocator:
+    """
+    物体定位器 - 用 LLM 分析图像，返回指定物体的坐标，可直接连接 SAM2
+    """
+    
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "object_prompt": ("STRING", {
+                    "multiline": True,
+                    "default": "drone, tank, robot dog, humanoid robot"
+                }),
+            },
+        }
+    
+    RETURN_TYPES = ("STRING", "STRING")
+    RETURN_NAMES = ("coordinates", "info")
+    FUNCTION = "locate"
+    CATEGORY = "DMXAPI/Academic"
+
+    def locate(self, image, object_prompt):
+        import json
+        
+        config = load_config()
+        api_key = config.get("api_key", "")
+        url = config.get("api_url", "https://vip.dmxapi.com/v1/chat/completions")
+        text_model = config.get("text_model", "gemini-2.5-flash-preview")
+        
+        if not api_key:
+            return ("[]", "错误: 未配置 API Key")
+        
+        # 获取图像尺寸
+        if isinstance(image, torch.Tensor):
+            if image.dim() == 4:
+                h, w = image.shape[1], image.shape[2]
+            else:
+                h, w = image.shape[0], image.shape[1]
+        else:
+            h, w = image.shape[0], image.shape[1]
+        
+        img_base64 = image_to_base64(image)
+        
+        locate_prompt = f"""Analyze this image and find the CENTER POINT coordinates of each object I specify.
+
+Image size: {w} x {h} pixels
+
+Objects to find: {object_prompt}
+
+For EACH object found, provide its center point as x,y coordinates.
+
+IMPORTANT: Output ONLY a valid JSON array in this exact format, nothing else:
+[{{"x": 123, "y": 456}}, {{"x": 789, "y": 101}}]
+
+Rules:
+- x is horizontal position (0 = left edge, {w} = right edge)
+- y is vertical position (0 = top edge, {h} = bottom edge)
+- Find ALL instances of the specified objects
+- If an object appears multiple times, include each instance
+- Output ONLY the JSON array, no explanation"""
+
+        content = [
+            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_base64}"}},
+            {"type": "text", "text": locate_prompt}
+        ]
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        }
+        
+        payload = {
+            "model": text_model,
+            "messages": [{"role": "user", "content": content}],
+            "temperature": 0.1,
+        }
+        
+        try:
+            print(f"[ObjectLocator] 使用模型: {text_model}")
+            print(f"[ObjectLocator] 图像尺寸: {w}x{h}")
+            print(f"[ObjectLocator] 查找物体: {object_prompt}")
+            response = requests.post(url, headers=headers, json=payload, timeout=60)
+            
+            if response.status_code == 200:
+                result = response.json()
+                raw_output = result["choices"][0]["message"]["content"].strip()
+                print(f"[ObjectLocator] 原始输出: {raw_output}")
+                
+                # 尝试提取 JSON
+                try:
+                    # 清理可能的 markdown 代码块
+                    if "```" in raw_output:
+                        import re
+                        json_match = re.search(r'\[.*?\]', raw_output, re.DOTALL)
+                        if json_match:
+                            raw_output = json_match.group()
+                    
+                    coords = json.loads(raw_output)
+                    
+                    # 确保坐标不为空
+                    if not coords or len(coords) == 0:
+                        # 返回图像中心作为默认坐标
+                        coords = [{"x": w // 2, "y": h // 2}]
+                        info = "未找到指定物体，返回图像中心坐标"
+                        print(f"[ObjectLocator] {info}")
+                        return (json.dumps(coords), info)
+                    
+                    coords_str = json.dumps(coords)
+                    info = f"找到 {len(coords)} 个物体坐标"
+                    print(f"[ObjectLocator] {info}: {coords_str}")
+                    return (coords_str, info)
+                except json.JSONDecodeError as e:
+                    print(f"[ObjectLocator] JSON 解析失败: {e}")
+                    # 返回图像中心作为默认坐标
+                    default_coords = [{"x": w // 2, "y": h // 2}]
+                    return (json.dumps(default_coords), f"JSON 解析失败，返回默认坐标: {raw_output[:100]}")
+            else:
+                error = f"API 错误: {response.status_code}"
+                print(f"[ObjectLocator] {error}")
+                # 返回图像中心作为默认坐标
+                default_coords = [{"x": w // 2, "y": h // 2}]
+                return (json.dumps(default_coords), error)
+                
+        except Exception as e:
+            error = f"错误: {str(e)}"
+            print(f"[ObjectLocator] {error}")
+            # 返回默认坐标
+            return ('[{"x": 100, "y": 100}]', error)
+
+
+class ColorRegionSegmenter:
+    """
+    颜色区域分割器 - 基于洪水填充的颜色连通区域分割
+    通过颜色相似度扩散，自动识别边界
+    """
+    
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "min_area_percent": ("FLOAT", {
+                    "default": 0.5,
+                    "min": 0.1,
+                    "max": 50.0,
+                    "step": 0.1,
+                    "display": "slider"
+                }),
+                "max_area_percent": ("FLOAT", {
+                    "default": 15.0,
+                    "min": 1.0,
+                    "max": 100.0,
+                    "step": 0.5,
+                    "display": "slider"
+                }),
+                "color_tolerance": ("INT", {
+                    "default": 10,
+                    "min": 1,
+                    "max": 50,
+                    "step": 1,
+                    "display": "slider"
+                }),
+                "use_8_connectivity": ("BOOLEAN", {"default": False}),
+            },
+        }
+    
+    RETURN_TYPES = ("MASK", "IMAGE", "STRING")
+    RETURN_NAMES = ("mask", "segmented_image", "info")
+    FUNCTION = "segment"
+    CATEGORY = "DMXAPI/Academic"
+
+    def segment(self, image, min_area_percent, max_area_percent, 
+                color_tolerance, use_8_connectivity):
+        import cv2
+        from collections import deque
+        
+        # 转换图像格式
+        if isinstance(image, torch.Tensor):
+            if image.dim() == 4:
+                img_np = image[0].cpu().numpy()
+            else:
+                img_np = image.cpu().numpy()
+            img_np = (img_np * 255).astype(np.uint8)
+        else:
+            img_np = (image * 255).astype(np.uint8)
+        
+        h, w = img_np.shape[:2]
+        total_pixels = h * w
+        min_area = int(total_pixels * min_area_percent / 100)
+        max_area = int(total_pixels * max_area_percent / 100)
+        
+        connectivity_str = "8-连通" if use_8_connectivity else "4-连通"
+        print(f"[ColorSegmenter] 图像尺寸: {w}x{h}, 总像素: {total_pixels}")
+        print(f"[ColorSegmenter] 面积范围: {min_area} - {max_area} 像素")
+        print(f"[ColorSegmenter] 颜色容差: {color_tolerance}, 连通方式: {connectivity_str}")
+        
+        # 确保是3通道图像
+        if len(img_np.shape) == 2:
+            img_np = cv2.cvtColor(img_np, cv2.COLOR_GRAY2RGB)
+        
+        # 定义邻居方向
+        if use_8_connectivity:
+            # 8-连通：上下左右 + 对角线
+            directions = [(-1, 0), (1, 0), (0, -1), (0, 1),
+                          (-1, -1), (-1, 1), (1, -1), (1, 1)]
+        else:
+            # 4-连通：只有上下左右
+            directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        
+        # 洪水填充函数 - 基于颜色相似度扩散
+        def flood_fill_by_color(start_y, start_x, visited):
+            """从起始点开始，基于颜色相似度进行洪水填充"""
+            if visited[start_y, start_x]:
+                return None, 0
+            
+            region_mask = np.zeros((h, w), dtype=bool)
+            queue = deque([(start_y, start_x)])
+            region_mask[start_y, start_x] = True
+            visited[start_y, start_x] = True
+            area = 1
+            
+            while queue:
+                cy, cx = queue.popleft()
+                current_color = img_np[cy, cx].astype(np.int32)
+                
+                for dy, dx in directions:
+                    ny, nx = cy + dy, cx + dx
+                    
+                    if 0 <= ny < h and 0 <= nx < w and not visited[ny, nx]:
+                        neighbor_color = img_np[ny, nx].astype(np.int32)
+                        
+                        # 检查颜色差异 - 与当前像素比较
+                        color_diff = np.max(np.abs(neighbor_color - current_color))
+                        
+                        if color_diff <= color_tolerance:
+                            # 颜色相近，继续扩散
+                            visited[ny, nx] = True
+                            region_mask[ny, nx] = True
+                            queue.append((ny, nx))
+                            area += 1
+            
+            return region_mask, area
+        
+        # 全局访问标记
+        visited = np.zeros((h, w), dtype=bool)
+        
+        # 收集所有候选区域
+        candidate_regions = []
+        
+        print(f"[ColorSegmenter] 开始扫描所有像素...")
+        
+        # 遍历所有像素作为潜在种子点
+        for y in range(h):
+            for x in range(w):
+                if visited[y, x]:
+                    continue
+                
+                region_mask, area = flood_fill_by_color(y, x, visited)
+                
+                if region_mask is not None and min_area <= area <= max_area:
+                    candidate_regions.append((region_mask, area))
+                    print(f"[ColorSegmenter] 找到候选区域: {area} 像素 ({area/total_pixels*100:.2f}%)")
+        
+        print(f"[ColorSegmenter] 候选区域数: {len(candidate_regions)}")
+        
+        # 创建最终 mask
+        final_mask = np.zeros((h, w), dtype=np.uint8)
+        valid_regions = 0
+        
+        # 为可视化创建彩色分割图
+        colors = [
+            [255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0],
+            [255, 0, 255], [0, 255, 255], [128, 0, 0], [0, 128, 0],
+            [0, 0, 128], [128, 128, 0], [128, 0, 128], [0, 128, 128],
+            [255, 128, 0], [128, 255, 0], [0, 128, 255], [255, 0, 128]
+        ]
+        segmented_vis = np.zeros((h, w, 3), dtype=np.uint8)
+        
+        for region_mask, area in candidate_regions:
+            final_mask[region_mask] = 255
+            color = colors[valid_regions % len(colors)]
+            segmented_vis[region_mask] = color
+            valid_regions += 1
+            print(f"[ColorSegmenter] 区域 {valid_regions}: {area} 像素 ({area/total_pixels*100:.2f}%) ✓")
+        
+        print(f"[ColorSegmenter] 有效区域数: {valid_regions}")
+        
+        # 转换为 ComfyUI 格式
+        mask_tensor = torch.from_numpy(final_mask.astype(np.float32) / 255.0).unsqueeze(0)
+        segmented_tensor = torch.from_numpy(segmented_vis.astype(np.float32) / 255.0).unsqueeze(0)
+        
+        info = f"找到 {valid_regions} 个有效区域 (容差: {color_tolerance}, {connectivity_str})"
+        
+        return (mask_tensor, segmented_tensor, info)

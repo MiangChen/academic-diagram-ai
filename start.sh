@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMFYUI_DIR="$SCRIPT_DIR/ComfyUI"
 CONFIG_FILE="$SCRIPT_DIR/config_llm.json"
 SETUP_MARKER="$SCRIPT_DIR/.setup_done"
+ENV_NAME="academic_diagram_311"
 
 # 颜色输出
 RED='\033[0;31m'
@@ -21,6 +22,11 @@ if [ ! -f "$SETUP_MARKER" ]; then
     echo -e "${YELLOW}请先运行: bash setup.sh${NC}"
     exit 1
 fi
+
+# 激活 conda 环境
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate "$ENV_NAME"
+echo -e "${GREEN}[环境] 已激活 conda 环境: ${ENV_NAME}${NC}"
 
 # 检查配置文件
 if [ ! -f "$CONFIG_FILE" ]; then
