@@ -28,19 +28,30 @@ class AcademicRenderer:
                     "multiline": True,
                     "default": "粘贴 Architect 生成的 Visual Schema 或直接输入绘图描述..."
                 }),
-                "color_palette": ("STRING", {
-                    "default": "Azure Blue (#E1F5FE), Slate Grey (#607D8B), Coral Orange (#FF7043), Mint Green (#A5D6A7)"
-                }),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffff}),
             },
-            "optional": image_inputs
+            "optional": {
+                "color_scheme_text": ("STRING", {
+                    "multiline": True,
+                    "default": "",
+                    "forceInput": True,
+                }),
+                **image_inputs
+            }
         }
+    
+    # 强制每次重新执行（不使用缓存）
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        import random
+        return random.random()
     
     RETURN_TYPES = ("IMAGE", "STRING")
     RETURN_NAMES = ("image", "info")
     FUNCTION = "render"
     CATEGORY = "DMXAPI/Academic"
 
-    def render(self, visual_schema, color_palette="", **kwargs):
+    def render(self, visual_schema, seed=0, color_scheme_text="", **kwargs):
         config = load_config()
         api_key = config.get("api_key", "")
         url = config.get("api_url", "https://vip.dmxapi.com/v1/chat/completions")
@@ -49,7 +60,7 @@ class AcademicRenderer:
         print(f"[Renderer] ========== 输入参数 DEBUG ==========")
         print(f"[Renderer] visual_schema 长度: {len(visual_schema)} chars")
         print(f"[Renderer] visual_schema 前200字符:\n{visual_schema[:200]}")
-        print(f"[Renderer] color_palette: '{color_palette}'")
+        print(f"[Renderer] color_scheme_text: '{color_scheme_text[:100] if color_scheme_text else '(空)'}'")
         print(f"[Renderer] =====================================")
         
         if not api_key:
@@ -81,9 +92,10 @@ Style requirements:
 - Clean white background
 - No 3D effects or shadows"""
         
-        if color_palette:
-            render_prompt += f"\n- Colors: {color_palette}"
-            print(f"[Renderer] 添加了 color_palette 到 prompt")
+        # 如果有预设颜色方案，强制指定
+        if color_scheme_text:
+            render_prompt += f"\n\n**CRITICAL COLOR INSTRUCTIONS (MUST FOLLOW):**\n{color_scheme_text}"
+            print(f"[Renderer] 添加了预设颜色方案到 prompt")
         
         content = []
         

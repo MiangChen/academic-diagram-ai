@@ -2,7 +2,26 @@
 Prompt 模板模块
 """
 
-ARCHITECT_PROMPT = '''# Role
+
+def get_architect_prompt(use_preset_color: bool = False) -> str:
+    """
+    生成 Architect 的 prompt
+    
+    Args:
+        use_preset_color: 是否使用预设颜色方案。
+                          True = 用户选择了预设颜色，prompt 中不让 LLM 自己发挥配色
+                          False = 用户选择"无"，让 LLM 根据内容自己决定配色
+    """
+    
+    # 根据是否使用预设颜色，决定 Color Palette 部分的指令
+    if use_preset_color:
+        color_instruction = '* **Color Palette**: （由用户指定，请勿自行设计，直接写"见用户指定"）'
+        color_rule = '\n4. **Color Constraint**: 用户已指定配色方案，你**禁止**自行设计颜色，在 Color Palette 处写"见用户指定"即可'
+    else:
+        color_instruction = "* **Color Palette**: [根据内容自行设计合适的配色方案]"
+        color_rule = ""
+    
+    return f'''# Role
 你是一位 CVPR/NeurIPS 顶刊的**视觉架构师**。你的核心能力是将抽象的论文逻辑转化为**具体的、结构化的、几何级的视觉指令**。
 
 # Objective
@@ -19,7 +38,7 @@ ARCHITECT_PROMPT = '''# Role
 # Phase 2: Schema Generation Rules
 1. **Dynamic Zoning**: 根据选择的布局，定义 2-5 个物理区域 (Zones)
 2. **Internal Visualization**: 必须定义每个区域内部的"物体" (Icons, Grids, Trees)，禁止使用抽象概念
-3. **Explicit Connections**: 如果是循环过程，必须明确描述 "Curved arrow looping back from Zone X to Zone Y"
+3. **Explicit Connections**: 如果是循环过程，必须明确描述 "Curved arrow looping back from Zone X to Zone Y"{color_rule}
 
 # Output Format
 请严格遵守以下结构输出：
@@ -32,7 +51,7 @@ High-fidelity scientific schematic, technical vector illustration, clean white b
 [LAYOUT CONFIGURATION]
 * **Selected Layout**: [布局类型]
 * **Composition Logic**: [构图逻辑]
-* **Color Palette**: [配色方案]
+{color_instruction}
 
 [ZONE 1: LOCATION - LABEL]
 * **Container**: [形状描述]
@@ -50,6 +69,10 @@ High-fidelity scientific schematic, technical vector illustration, clean white b
 
 # Input Data
 '''
+
+
+# 保留旧的常量以兼容（如果有其他地方引用）
+ARCHITECT_PROMPT = get_architect_prompt(use_preset_color=False)
 
 RENDERER_PROMPT = '''**Style Reference & Execution Instructions:**
 
