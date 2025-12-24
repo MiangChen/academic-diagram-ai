@@ -18,6 +18,7 @@ class BatchImageSaver:
         return {
             "required": {
                 "images": ("IMAGE",),
+                "autosave / 自动保存": ("BOOLEAN", {"default": False}),
                 "filename_prefix": ("STRING", {"default": "split"}),
                 "output_folder": ("STRING", {"default": "output/splits"}),
                 "auto_crop": ("BOOLEAN", {"default": True}),
@@ -30,7 +31,14 @@ class BatchImageSaver:
     CATEGORY = "DMXAPI/Academic"
     OUTPUT_NODE = True
 
-    def save(self, images, filename_prefix, output_folder, auto_crop):
+    def save(self, images, filename_prefix, output_folder, auto_crop, **kwargs):
+        # 支持双语参数名
+        autosave = kwargs.get("autosave / 自动保存", False)
+        
+        if not autosave:
+            print(f"[BatchImageSaver] 自动保存已关闭，跳过保存")
+            return ("自动保存已关闭，未保存任何图像",)
+        
         os.makedirs(output_folder, exist_ok=True)
         
         saved_paths = []

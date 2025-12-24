@@ -18,17 +18,18 @@ class AcademicArchitect:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "paper_content": ("STRING", {
+                "paper_content / 论文内容": ("STRING", {
                     "multiline": True,
                     "default": "在此粘贴论文摘要或方法章节内容..."
                 }),
-                "layout_hint": (list(LAYOUT_TYPES.keys()), {"default": "None / 无"}),
+                "bypass / 直通模式": ("BOOLEAN", {"default": False}),
+                "layout_hint / 布局提示": (list(LAYOUT_TYPES.keys()), {"default": "None / 无"}),
                 "zone_count / 分栏数量": ("INT", {"default": 3, "min": 0, "max": 10}),
-                "color_scheme": (list(COLOR_SCHEMES.keys()), {"default": "无"}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffff}),
+                "color_scheme / 配色方案": (list(COLOR_SCHEMES.keys()), {"default": "无"}),
+                "seed / 随机种子": ("INT", {"default": 0, "min": 0, "max": 0xffffffff}),
             },
             "optional": {
-                "custom_instructions": ("STRING", {
+                "custom_instructions / 自定义指令": ("STRING", {
                     "multiline": True,
                     "default": ""
                 }),
@@ -47,9 +48,23 @@ class AcademicArchitect:
     FUNCTION = "generate_schema"
     CATEGORY = "DMXAPI/Academic"
 
-    def generate_schema(self, paper_content, layout_hint, color_scheme="无", seed=0, custom_instructions="", **kwargs):
+    def generate_schema(self, **kwargs):
         # 支持双语参数名
+        paper_content = kwargs.get("paper_content / 论文内容", "")
+        bypass = kwargs.get("bypass / 直通模式", False)
+        layout_hint = kwargs.get("layout_hint / 布局提示", "None / 无")
         zone_count = kwargs.get("zone_count / 分栏数量", 0)
+        color_scheme = kwargs.get("color_scheme / 配色方案", "无")
+        seed = kwargs.get("seed / 随机种子", 0)
+        custom_instructions = kwargs.get("custom_instructions / 自定义指令", "")
+        
+        # 获取颜色方案文本
+        color_scheme_text = COLOR_SCHEMES.get(color_scheme, "")
+        
+        # 直通模式：直接输出输入内容，跳过 LLM
+        if bypass:
+            print("[Architect] 直通模式：跳过 LLM，直接输出输入内容")
+            return (paper_content, color_scheme_text, paper_content)
         
         config = load_config()
         api_key = config.get("api_key", "")

@@ -100,7 +100,7 @@ A: 需要Ctrl + S, 会保存到 `./ComfyUI/user` 中
 
 **Q: 生成的图片会自动保存到本地吗?**
 
-A: 会的. 会保存到 `./ComfuUI/temp` 中
+A: 会的. 会保存到 `./ComfyUI/temp` 中。注意：关闭 ComfyUI 后，temp 目录会自动清空。如需永久保存，请使用 BatchImageSaver 节点或右键图片手动保存。
 
 **Q: 为什么运行后是红色的结果**
 
