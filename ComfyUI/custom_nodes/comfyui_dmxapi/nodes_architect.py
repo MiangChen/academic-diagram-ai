@@ -22,8 +22,8 @@ class AcademicArchitect:
                     "multiline": True,
                     "default": "在此粘贴论文摘要或方法章节内容..."
                 }),
-                "layout_hint": (list(LAYOUT_TYPES.keys()), {"default": "Linear Pipeline"}),
-                "zone_count": ("INT", {"default": 3, "min": 2, "max": 5}),
+                "layout_hint": (list(LAYOUT_TYPES.keys()), {"default": "None / 无"}),
+                "zone_count / 分栏数量": ("INT", {"default": 3, "min": 0, "max": 10}),
                 "color_scheme": (list(COLOR_SCHEMES.keys()), {"default": "无"}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffff}),
             },
@@ -47,7 +47,10 @@ class AcademicArchitect:
     FUNCTION = "generate_schema"
     CATEGORY = "DMXAPI/Academic"
 
-    def generate_schema(self, paper_content, layout_hint, zone_count, color_scheme="无", seed=0, custom_instructions=""):
+    def generate_schema(self, paper_content, layout_hint, color_scheme="无", seed=0, custom_instructions="", **kwargs):
+        # 支持双语参数名
+        zone_count = kwargs.get("zone_count / 分栏数量", 0)
+        
         config = load_config()
         api_key = config.get("api_key", "")
         url = config.get("api_url", "https://vip.dmxapi.com/v1/chat/completions")
@@ -65,7 +68,16 @@ class AcademicArchitect:
         full_prompt = architect_prompt + paper_content
         if custom_instructions:
             full_prompt += f"\n\n# Additional Instructions\n{custom_instructions}"
-        full_prompt += f"\n\n# Hints\n- 建议使用 {layout_hint} 布局\n- 建议划分 {zone_count} 个区域"
+        
+        # 只有在非 "None / 无" 时才添加布局和分栏提示
+        hints = []
+        if layout_hint != "None / 无":
+            hints.append(f"建议使用 {layout_hint} 布局")
+        if zone_count > 0:
+            hints.append(f"建议划分 {zone_count} 个区域")
+        
+        if hints:
+            full_prompt += f"\n\n# Hints\n- " + "\n- ".join(hints)
         
         # 如果选择了预设颜色，强制指定
         if use_preset_color:

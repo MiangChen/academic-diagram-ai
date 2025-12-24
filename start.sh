@@ -39,7 +39,8 @@ fi
 find_available_port() {
     local port=$1
     while lsof -i :$port >/dev/null 2>&1; do
-        echo -e "${YELLOW}[端口] $port 已被占用，尝试下一个...${NC}"
+        # 日志输出到 stderr，避免污染返回值
+        echo -e "${YELLOW}[端口] $port 已被占用，尝试下一个...${NC}" >&2
         port=$((port + 1))
     done
     echo $port

@@ -59,6 +59,7 @@ BORDER_STYLES = {
 
 # 布局类型
 LAYOUT_TYPES = {
+    "None / 无": "不指定布局，完全由用户 prompt 决定",
     "Linear Pipeline": "左→右流向，适合 Data Processing, Encoding-Decoding",
     "Cyclic/Iterative": "中心包含循环箭头，适合 Optimization, RL, Feedback Loops",
     "Hierarchical Stack": "上→下或下→上堆叠，适合 Multiscale features, Tree structures",
