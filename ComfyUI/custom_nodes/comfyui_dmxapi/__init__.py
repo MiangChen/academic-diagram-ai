@@ -7,6 +7,7 @@ from .nodes_renderer import AcademicRenderer
 from .nodes_editor import AcademicEditor
 from .nodes_segmenter import ColorRegionSegmenter, TransparentSplitter
 from .nodes_saver import BatchImageSaver
+from .nodes_bg_remover import BackgroundRemover
 
 # 节点注册
 NODE_CLASS_MAPPINGS = {
@@ -16,6 +17,7 @@ NODE_CLASS_MAPPINGS = {
     "ColorRegionSegmenter": ColorRegionSegmenter,
     "TransparentSplitter": TransparentSplitter,
     "BatchImageSaver": BatchImageSaver,
+    "BackgroundRemover": BackgroundRemover,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -25,6 +27,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ColorRegionSegmenter": "学术插图 - 颜色区域分割 (ColorSegmenter)",
     "TransparentSplitter": "学术插图 - 透明分割 (TransparentSplitter)",
     "BatchImageSaver": "学术插图 - 批量保存 (BatchSaver)",
+    "BackgroundRemover": "学术插图 - 智能背景移除 (BgRemover)",
 }
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
